@@ -7,11 +7,21 @@ map<string,int> heuristic;
 map<string,bool>vis;
 map<string,int>dist;
 
+map<string,string>parentNode;
+vector<string>path;
+
+void printPath(string node){
+    path.push_back(node);
+    if(parentNode[node]==node) return;
+    printPath(parentNode[node]);
+}
+
 void aStarSearch(string source,string destination){
     multiset<pair<int,string>>st; // dist - nodeName
     
     st.insert(make_pair(heuristic[source],source));
     dist[source]=heuristic[source];
+    parentNode[source]=source;
 
     while(!st.empty()){
         auto node = *st.begin();
@@ -25,7 +35,11 @@ void aStarSearch(string source,string destination){
             string childName = child.first;
             int pathCost = child.second;
             int tempCost = cost-heuristic[parent]+pathCost+heuristic[childName];
-            dist[childName] = min(dist[childName],tempCost);
+            //dist[childName] = min(dist[childName],tempCost);
+            if(tempCost<dist[childName]){
+                parentNode[childName] = parent;
+                dist[childName] = tempCost;
+            }
             st.insert(make_pair(dist[childName],childName));
         }
     }
@@ -55,5 +69,11 @@ int main(){
     cin>>source>>destination;
     aStarSearch(source,destination);
     cout<<"The path cost is :: "<<dist[destination]<<endl;
+    printPath(destination);
+    cout<<"And the path is :: ";
+    for(int i=path.size()-1;i>=0;i--){
+        cout<<path[i];
+        if(i!=0) cout<<" -> ";
+    }cout<<endl;
     return 0;
 }
