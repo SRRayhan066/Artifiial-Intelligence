@@ -61,42 +61,48 @@ bool allCheck(vector<vector<char>>&board,char findChar){
     return false;
 }
 
-int minmax(vector<vector<char>>board,bool playerTurnOn){
-    int score;
+pair<int,int> minmax(vector<vector<char>>board,int depth,bool playerTurnOn){
+    pair<int,int>score;
     bool checkPlayer=allCheck(board,player);
     bool checkComputer=allCheck(board,computer);
     bool draw=matchDraw(board);
-    if(checkPlayer) return score=1;
-    else if(checkComputer) return score=-1;
-    else if(draw) return score=0;
+    if(checkPlayer) return score={1,depth};
+    else if(checkComputer) return score={-1,depth};
+    else if(draw) return score={0,depth};
     else{
         if(playerTurnOn){
-            int bestScore=-1000;
+            pair<int,int> bestScore={-1000,INT_MAX};
             for(int i=0;i<boardSize;i++){
                 for(int j=0;j<boardSize;j++){
                     if(board[i][j]!=player && board[i][j]!=computer){
                         char slotChar=board[i][j];
                         board[i][j]=player;
-                        int tempScore=minmax(board,!playerTurnOn);
+                        pair<int,int> tempScore=minmax(board,depth+1,!playerTurnOn);
                         board[i][j]=slotChar;
-                        if(tempScore>bestScore){
+                        if(tempScore.first>bestScore.first){
+                            // bestScore.first=tempScore.first;
+                            // bestScore.second=depth;
                             bestScore=tempScore;
+                        }else if(tempScore.first==bestScore.first){
+                            bestScore.second=min(bestScore.second,tempScore.second);
                         }
                     }
                 }
             }
             return bestScore;
         }else{
-            int bestScore=1000;
+            pair<int,int> bestScore={1000,INT_MAX};
             for(int i=0;i<boardSize;i++){
                 for(int j=0;j<boardSize;j++){
                     if(board[i][j]!=player && board[i][j]!=computer){
                         char slotChar=board[i][j];
                         board[i][j]=computer;
-                        int tempScore=minmax(board,!playerTurnOn);
+                        pair<int,int> tempScore=minmax(board,depth+1,!playerTurnOn);
                         board[i][j]=slotChar;
-                        if(tempScore<bestScore){
+                        if(tempScore.first<bestScore.first){
                             bestScore=tempScore;
+                        }else if(tempScore.first==bestScore.first){
+                            bestScore.second=min(bestScore.second,tempScore.second);
                         }
                     }
                 }
@@ -107,7 +113,7 @@ int minmax(vector<vector<char>>board,bool playerTurnOn){
 }
 
 void computerTurn(vector<vector<char>>&board){
-    int score=INT_MAX;
+    pair<int,int> score={INT_MAX,INT_MAX};
     int corX,corY;
     for(int i=0;i<board.size();i++){
         for(int j=0;j<board[i].size();j++){
@@ -115,7 +121,7 @@ void computerTurn(vector<vector<char>>&board){
                 char slotChar=board[i][j];
                 board[i][j]=computer;
                 bool playerTurnOn=true;
-                int tempScore=minmax(board,playerTurnOn);
+                pair<int,int> tempScore=minmax(board,0,playerTurnOn);
                 board[i][j]=slotChar;
                 if(tempScore<score){
                     score=tempScore;
@@ -142,7 +148,11 @@ int main(){
     while(1){
         cout<<"Your Turn :: ";
         int x;cin>>x;
-        board[(x-1)/3][(x-1)%3]=player;
+        if(board[(x-1)/3][(x-1)%3]!=player && board[(x-1)/3][(x-1)%3]!=computer) board[(x-1)/3][(x-1)%3]=player;
+        else{
+            cout<<"Invalid move. Try again"<<endl;
+            continue;
+        }
         cout<<endl;
         displayBoard(board);
         bool checkPlayer=allCheck(board,player);
